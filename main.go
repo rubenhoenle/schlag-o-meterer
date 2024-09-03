@@ -17,13 +17,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func getEnv(key, fallback string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists || value == "" {
+		return fallback
+	}
+	return value
+}
+
+var sshHost = getEnv("SSH_HOST", "localhost")
+var sshPort = getEnv("SSH_PORT", "23235")
+
 const (
-	sshHost    = "localhost"
-	sshPort    = "23235"
 	counterMax = 100
 )
-
-var counter = 0
 
 func getCmd() *cobra.Command {
 	var cmd = &cobra.Command{
