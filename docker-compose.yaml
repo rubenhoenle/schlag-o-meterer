@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  schlag-o-meter:
+    image: ghcr.io/rubenhoenle/schlag-o-meterer:unstable
+    container_name: schlago
+    ports:
+      - 23235:23235
+    environment:
+      SSH_HOST: "0.0.0.0"
+    volumes:
+      - ./config.json:/config.json
+      - ./.ssh:/.ssh

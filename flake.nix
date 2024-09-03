@@ -31,6 +31,14 @@
         vendorHash = "sha256-gA1t0HFOeXH1D7VRw5XCXE4oQ/DKdgVbQVJU3sm1wIs=";
         src = ./.;
       };
+
+      containerImage = pkgs.dockerTools.buildLayeredImage {
+        name = "ghcr.io/rubenhoenle/schlag-o-meterer";
+        tag = "unstable";
+        config = {
+          Entrypoint = [ "${schlag-o-meter}/bin/schlag-o-meter" ];
+        };
+      };
     in
     {
       formatter.${system} = treefmtEval.config.build.wrapper;
@@ -44,6 +52,7 @@
 
       packages.${system} = {
         default = schlag-o-meter;
+        containerimage = containerImage;
       };
     };
 }
