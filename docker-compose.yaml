@@ -10,4 +10,5 @@ services:
       SSH_HOST: "0.0.0.0"
     volumes:
       - ./config.json:/config.json
+      - ./.pubkeys:/.pubkeys
       - ./.ssh:/.ssh
