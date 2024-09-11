@@ -1,4 +1,4 @@
-# Schlag-o-meter
+# Schlag-O-Meterer
 
 ```bash
 # running the application
@@ -25,4 +25,17 @@ docker load < result
 
 # start the container
 docker compose up -d
+```
+
+## Configuration
+
+- `SSH_HOST`: ssh host to use (default `localhost`)
+- `SSH_PORT`: ssh port to use (default `23235`)
+- `SSH_PUBKEY_FILE`: path to file with ssh public keys (`ed25519` key type, seperated by `\n`) which are allowed to increment / edit the counter (default `./.pubkeys`). If the file isn't found the application will start, but nobody will be able to modify the counters value.
+
+Example for the `SSH_PUBKEY_FILE` content
+
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAS9nLidDyoFWspHE/IFB7ULMnsLsM+YtGKYreYH7UTa
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEzsOgEiuiTQEUZnMORRmhMHDSAo8VBUl/g55Ec6ZaKM
 ```

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -27,6 +28,19 @@ func getEnv(key, fallback string) string {
 
 var sshHost = getEnv("SSH_HOST", "localhost")
 var sshPort = getEnv("SSH_PORT", "23235")
+var sshPubKeyFile = getEnv("SSH_PUBKEY_FILE", ".pubkeys")
+
+func getPubKeysFromFile() []string {
+	dat, err := os.ReadFile(sshPubKeyFile)
+	if os.IsNotExist(err) {
+		println("ERROR: SSH pubkey file not found! Nobody will be able to adjust the counter!")
+		return []string{}
+	}
+	if err != nil {
+		panic(err)
+	}
+	return strings.Split(string(dat), "\n")
+}
 
 const (
 	counterMax = 100
@@ -111,9 +125,14 @@ func setCounter(newVal int) {
 }
 
 func main() {
+	pubKeys := getPubKeysFromFile()
+
 	s, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(sshHost, sshPort)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
+		wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+			return key.Type() == "ssh-ed25519"
+		}),
 		wish.WithMiddleware(
 			func(next ssh.Handler) ssh.Handler {
 				return func(sess ssh.Session) {
@@ -123,10 +142,19 @@ func main() {
 					rootCmd.SetOut(sess)
 					rootCmd.SetErr(sess.Stderr())
 
-					// register the commands
+					for _, pubkey := range pubKeys {
+						parsed, _, _, _, _ := ssh.ParseAuthorizedKey(
+							[]byte(pubkey),
+						)
+						if ssh.KeysEqual(sess.PublicKey(), parsed) {
+							// register the commands which are only available with authenciation
+							rootCmd.AddCommand(incrCmd())
+							rootCmd.AddCommand(setCmd())
+						}
+					}
+
+					// register the commands which are available with and without authentication
 					rootCmd.AddCommand(getCmd())
-					rootCmd.AddCommand(incrCmd())
-					rootCmd.AddCommand(setCmd())
 
 					rootCmd.CompletionOptions.DisableDefaultCmd = true
 
